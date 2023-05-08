@@ -3,6 +3,7 @@ package com.myspring.aop.annotation;
 import com.myspring.AspectJExpressionPointcut;
 import com.myspring.aop.Advice;
 import com.myspring.aop.Advisor;
+import com.myspring.aop.aspectj.AbstractAspectJAdvice;
 import com.myspring.aop.aspectj.AspectJAdvisorFactory;
 import com.myspring.aop.aspectj.AspectJMethodBeforeAdvice;
 import com.myspring.aop.aspectj.InstantiationModelAwarePointcutAdvisorImpl;
@@ -77,19 +78,27 @@ public class ReflectiveAspectJAdvisorFactory implements AspectJAdvisorFactory {
             case AtPointcut:
                 return null;
             case AtAfter:
+                springAdvice = null;
                 break;
             case AtBefore:
-                new AspectJMethodBeforeAdvice(candidateAdviceMethod,pointcut,aspectClass);
+                springAdvice = new AspectJMethodBeforeAdvice(candidateAdviceMethod,pointcut,aspectClass);
                 break;
             case AtAround:
+                springAdvice = null;
                 break;
             case AtAfterReturning:
+                springAdvice = null;
                 break;
             case AtAfterThrowing:
+                springAdvice = null;
                 break;
+            default:
+                throw new RuntimeException();
 
         }
-        return null;
+        ((AbstractAspectJAdvice)springAdvice).setAspectName(aspectName);
+        ((AbstractAspectJAdvice)springAdvice).calculateArgumentBindings();
+        return (Advice)springAdvice;
     }
 
     private AspectJExpressionPointcut getPointcut(Method candidateAdviceMethod, Class<?> candidateAspectClass){

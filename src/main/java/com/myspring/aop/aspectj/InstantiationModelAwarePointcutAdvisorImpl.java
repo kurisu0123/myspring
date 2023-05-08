@@ -32,6 +32,7 @@ public class InstantiationModelAwarePointcutAdvisorImpl implements PointcutAdvis
         this.aspectClass = aspectClass;
         this.declaredPointcut = aspectJExpressionPointcut;
         this.aspectJAdviceMethod = aspectJAdviceMethod;
+        this.aspectJAdvisorFactory = aspectJAdvisorFactory;
         this.declaringClass = aspectJAdviceMethod.getDeclaringClass();
         this.parameterTypes = aspectJAdviceMethod.getParameterTypes();
         this.methodName = aspectJAdviceMethod.getName();
