@@ -11,7 +11,7 @@ import com.wuhao.service.UserService;
 public class MySpringApplication {
     public static void main(String[] args) {
         MyApplicationContext context = new MyApplicationContext(MySpringApplication.class);
-        UserService userService = (UserService) context.getBean("userService");
-        TestService testService = (TestService) context.getBean("testService");
+//        UserService userService = (UserService) context.getBean("userService");
+//        TestService testService = (TestService) context.getBean("testService");
     }
 }

@@ -1,16 +1,20 @@
 package com.myspring.aop.annotation;
 
+import com.myspring.aop.Advice;
 import com.myspring.aop.Advisor;
+import com.myspring.aop.PointcutAdvisor;
 import com.myspring.beans.factory.BeanFactory;
 import com.myspring.beans.factory.BeanFactoryAware;
 import com.myspring.beans.factory.SmartInstantiationAwareBeanPostProcessor;
 import com.sun.istack.internal.NotNull;
+import com.myspring.aop.Pointcut;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AnnotationAwareAspectJAutoProxyCreator implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware {
 
+    protected static final Object[] DO_NOT_PROXY = null;
     private BeanFactory beanFactory;
 
     private volatile String[] cachedAdvisorBeanNames;
@@ -18,6 +22,8 @@ public class AnnotationAwareAspectJAutoProxyCreator implements SmartInstantiatio
     private volatile List<String> aspectBeanNames;
 
     private ReflectiveAspectJAdvisorFactory aspectJAdvisorFactory;
+
+    private final Map<Object, Boolean> advisedBeans = new ConcurrentHashMap(256);
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) {
@@ -34,13 +40,45 @@ public class AnnotationAwareAspectJAutoProxyCreator implements SmartInstantiatio
             aspectJAdvisorFactory = new ReflectiveAspectJAdvisorFactory(beanFactory);
         }
         List<Advisor> candidateAdvisors = this.findCandidateAdvisors();
-//        List<Advisor> eligibleAdvisors = this.findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
+        List<Advisor> eligibleAdvisors = this.findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
         return candidateAdvisors;
     }
 
+    private List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> beanClass, String beanName) {
+        System.out.println(candidateAdvisors+beanClass.getName()+beanName);
+        List<Advisor> advisors = new ArrayList<>();
+        Iterator<Advisor> iterator = candidateAdvisors.iterator();
+        while (iterator.hasNext()){
+            Advisor advisor = iterator.next();
+            if (advisor instanceof PointcutAdvisor){
+                Pointcut pointcut = ((PointcutAdvisor) advisor).getPointcut();
+                if (pointcut != null){
+                    pointcut.getClassFilter().matches(beanClass);
+                }
+            }
+        }
+        return advisors;
+    }
+
+
+    protected Object[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName) {
+        List<Advisor> advisors = this.findEligibleAdvisors(beanClass, beanName);
+        return advisors.isEmpty() ? DO_NOT_PROXY : advisors.toArray();
+    }
+
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
-        findEligibleAdvisors(beanClass, beanName);
+        if (isInfrastructureClass(beanClass)){
+            this.advisedBeans.put(beanName,Boolean.FALSE);
+            return null;
+        }
+        //todo 自定义TargetSource的处理
+        Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass,beanName);
         return null;
+    }
+
+    protected boolean isInfrastructureClass(Class<?> beanClass) {
+        boolean retVal = Advice.class.isAssignableFrom(beanClass) || Pointcut.class.isAssignableFrom(beanClass) || Advisor.class.isAssignableFrom(beanClass);
+        return retVal;
     }
 
     private List<Advisor> findCandidateAdvisors(){

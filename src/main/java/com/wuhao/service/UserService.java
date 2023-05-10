@@ -3,7 +3,7 @@ package com.wuhao.service;
 import com.myspring.core.annotation.Autowired;
 import com.myspring.core.annotation.Component;
 
-@Component
+//@Component
 public class UserService {
 
 //    @Autowired

@@ -52,6 +52,6 @@ public class InstantiationModelAwarePointcutAdvisorImpl implements PointcutAdvis
 
     @Override
     public Pointcut getPointcut() {
-        return null;
+        return this.declaredPointcut;
     }
 }

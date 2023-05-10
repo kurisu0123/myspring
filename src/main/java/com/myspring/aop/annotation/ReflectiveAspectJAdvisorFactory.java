@@ -3,6 +3,7 @@ package com.myspring.aop.annotation;
 import com.myspring.AspectJExpressionPointcut;
 import com.myspring.aop.Advice;
 import com.myspring.aop.Advisor;
+import com.myspring.aop.ClassFilter;
 import com.myspring.aop.aspectj.AbstractAspectJAdvice;
 import com.myspring.aop.aspectj.AspectJAdvisorFactory;
 import com.myspring.aop.aspectj.AspectJMethodBeforeAdvice;
@@ -15,7 +16,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class ReflectiveAspectJAdvisorFactory implements AspectJAdvisorFactory {
+public class ReflectiveAspectJAdvisorFactory implements AspectJAdvisorFactory, ClassFilter {
 
     private final BeanFactory beanFactory;
 
@@ -96,6 +97,9 @@ public class ReflectiveAspectJAdvisorFactory implements AspectJAdvisorFactory {
                 throw new RuntimeException();
 
         }
+        if (springAdvice == null){
+            return null;
+        }
         ((AbstractAspectJAdvice)springAdvice).setAspectName(aspectName);
         ((AbstractAspectJAdvice)springAdvice).calculateArgumentBindings();
         return (Advice)springAdvice;
@@ -128,6 +132,11 @@ public class ReflectiveAspectJAdvisorFactory implements AspectJAdvisorFactory {
     private static <A extends Annotation> AspectJAnnotation<A> findAnnotation(Class<A> toLookFor, Method method){
         A annotation = AnnotationUtils.findAnnotation(method,toLookFor);
         return annotation == null? null:new AspectJAnnotation<>(annotation);
+    }
+
+    @Override
+    public boolean matches(Class<?> clazz) {
+        return false;
     }
 
     protected static class AspectJAnnotation<A extends Annotation>{
